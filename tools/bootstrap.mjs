@@ -61,6 +61,11 @@ function ensureDir(p) {
 }
 
 function writeFile(dest, content) {
+  // Strip UTF-8 BOM if present to avoid shebang parse failures.
+  if (content.charCodeAt(0) === 0xfeff) {
+    console.warn(`==> stripped BOM: ${dest}`);
+    content = content.slice(1);
+  }
   ensureDir(path.dirname(dest));
   fs.writeFileSync(dest, content, "utf-8");
 }
