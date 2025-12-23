@@ -1,4 +1,3 @@
-\
 #!/usr/bin/env node
 /**
  * DevRules — Install to Repo (copy mode)
