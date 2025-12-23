@@ -56,6 +56,7 @@ node ~/DevRules/tools/apply-rules.mjs --force
 
 ## Supported rulesets
 - swift
+- node-js
 - node-ts
 - python-fastapi
 - go

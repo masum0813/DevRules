@@ -7,7 +7,7 @@
  *
  * Options forwarded to install-to-repo.mjs:
  *   --repo PATH
- *   --rules swift|node-ts|python-fastapi|go|dotnet
+ *   --rules swift|node-js|node-ts|python-fastapi|go|dotnet
  *   --force
  *   --dry-run
  *   --no-makefile --no-justfile --no-npm

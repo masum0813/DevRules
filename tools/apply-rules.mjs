@@ -62,11 +62,10 @@ function detectRuleset(repo) {
   if (has("Package.swift") || entries.some(f => f.endsWith(".xcodeproj"))) return "swift";
   if (walkHasExt(repo, ".swift", 2)) return "swift";
 
-  // Node/TS
+  // Node
   if (has("package.json")) {
     if (has("tsconfig.json") || walkHasExt(repo, ".ts", 2) || walkHasExt(repo, ".tsx", 2)) return "node-ts";
-    // still node, but default to node-ts ruleset (works fine for JS too)
-    return "node-ts";
+    return "node-js";
   }
 
   // Python/FastAPI
@@ -137,7 +136,7 @@ function main() {
   const repo = path.resolve(args.repo);
   const rules = args.rules ?? detectRuleset(repo);
   if (!rules) {
-    console.error("Could not detect a ruleset. Use --rules {swift|node-ts|python-fastapi|go|dotnet}");
+    console.error("Could not detect a ruleset. Use --rules {swift|node-js|node-ts|python-fastapi|go|dotnet}");
     process.exit(2);
   }
 
