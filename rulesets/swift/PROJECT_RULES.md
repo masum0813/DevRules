@@ -4,6 +4,14 @@
 - Write safe, readable, testable Swift code.
 - Prefer modern Swift concurrency and SwiftUI where applicable.
 
+## Engineering Best Practices
+- **Design:** Apply SOLID where applicable; prefer composition over inheritance; keep responsibilities small.
+- **Public API documentation (Tooltip-friendly):** All `public`/`open` types, methods, and properties MUST have
+  `///` doc comments visible in Xcode Quick Help.
+  - Include: 1-line summary, parameter descriptions, return value (if any), and important edge cases.
+- **Data integrity (ACID / DB writes):** If this project performs database or persistent writes,
+  write operations MUST be transactional with explicit commit/rollback boundaries.
+
 ## Language & Style
 - Swift 5.9+ (or current toolchain used by the repo).
 - Follow Swift API Design Guidelines.

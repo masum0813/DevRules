@@ -3,6 +3,14 @@
 ## Goals
 - Idiomatic Go, small interfaces, clear errors, fast builds.
 
+## Engineering Best Practices
+- **Design:** Apply SOLID intent where appropriate; prefer composition and small interfaces.
+- **Public API documentation (Tooltip-friendly):** Exported identifiers MUST include GoDoc comments
+  (starting with the identifier name) so IDE tooltips are informative.
+  - Include: concise summary, non-obvious parameters/returns, and important edge cases.
+- **Data integrity (ACID / DB writes):** If the project performs database writes,
+  multi-step writes MUST be executed within explicit transactions.
+
 ## Style
 - gofmt required; goimports for imports.
 - Wrap errors with context using `%w`.

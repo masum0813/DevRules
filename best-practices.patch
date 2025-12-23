@@ -1,0 +1,162 @@
+diff --git a/README.md b/README.md
+--- a/README.md
++++ b/README.md
+@@ -97,3 +97,15 @@
+ > Notes:
+ > - Requires Node.js 18+ (for built-in `fetch`).
+ > - Replace the URL owner/repo/branch if you fork DevRules.
++
++## Best Practices (applied by rulesets)
++
++The following engineering principles are enforced through the rulesets and Copilot instructions:
++
++- **Design:** SOLID principles with a composition-first approach (avoid deep inheritance).
++- **Documentation (Public only):** All public/exported APIs must include tooltip-friendly documentation
++  (JSDoc, docstrings, XML docs, Swift `///`, GoDoc).
++- **Code Completion Friendly:** Documentation must be written so IDE code completion tooltips clearly
++  explain intent, parameters, return values, and important edge cases.
++- **Data Integrity:** If a project performs database writes, **ACID-compliant transactional boundaries**
++  are mandatory (no partial writes).
+diff --git a/rulesets/swift/PROJECT_RULES.md b/rulesets/swift/PROJECT_RULES.md
+--- a/rulesets/swift/PROJECT_RULES.md
++++ b/rulesets/swift/PROJECT_RULES.md
+@@ -3,6 +3,14 @@
+ ## Goals
+ - Write safe, readable, testable Swift code.
+ - Prefer modern Swift concurrency and SwiftUI where applicable.
++
++## Engineering Best Practices
++- **Design:** Apply SOLID where applicable; prefer composition over inheritance; keep responsibilities small.
++- **Public API documentation (Tooltip-friendly):** All `public`/`open` types, methods, and properties MUST have
++  `///` doc comments visible in Xcode Quick Help.
++  - Include: 1-line summary, parameter descriptions, return value (if any), and important edge cases.
++- **Data integrity (ACID / DB writes):** If this project performs database or persistent writes,
++  write operations MUST be transactional with explicit commit/rollback boundaries.
+ 
+ ## Language & Style
+ - Swift 5.9+ (or current toolchain used by the repo).
+diff --git a/rulesets/swift/copilot-instructions.md b/rulesets/swift/copilot-instructions.md
+--- a/rulesets/swift/copilot-instructions.md
++++ b/rulesets/swift/copilot-instructions.md
+@@ -6,3 +6,8 @@
+ - UI updates must be on MainActor.
+ - For new features: propose file structure (Models/ViewModels/Views/Services).
+ - Include unit tests for new non-trivial logic.
++
++- Ensure all `public`/`open` APIs include `///` documentation suitable for code completion tooltips
++  (summary + params/returns + edge cases).
++- If implementing persistence or database writes, ensure ACID-friendly transactional boundaries
++  and avoid partial writes.
+diff --git a/rulesets/node-ts/PROJECT_RULES.md b/rulesets/node-ts/PROJECT_RULES.md
+--- a/rulesets/node-ts/PROJECT_RULES.md
++++ b/rulesets/node-ts/PROJECT_RULES.md
+@@ -2,6 +2,14 @@
+ 
+ ## Goals
+ - Production-grade TypeScript, predictable runtime behavior, strong typing.
++
++## Engineering Best Practices
++- **Design:** Apply SOLID where applicable; prefer composition over inheritance; keep responsibilities small.
++- **Public API documentation (Tooltip-friendly):** All exported/public APIs MUST include JSDoc (`/** ... */`)
++  so code completion tooltips clearly explain intent.
++  - Include: 1-line summary, `@param` descriptions, `@returns` / `@throws`, and important edge cases.
++- **Data integrity (ACID / DB writes):** If the project performs database writes,
++  multi-step writes MUST run inside explicit transactions with commit/rollback semantics.
+ 
+ ## Language & Runtime
+ - Use TypeScript (no implicit `any`).
+diff --git a/rulesets/node-ts/copilot-instructions.md b/rulesets/node-ts/copilot-instructions.md
+--- a/rulesets/node-ts/copilot-instructions.md
++++ b/rulesets/node-ts/copilot-instructions.md
+@@ -6,3 +6,7 @@
+ - Use async/await.
+ - Add/update tests for new logic.
+ - Do not introduce secrets; use env vars and config schema.
++
++- Add JSDoc for all exported/public APIs so code completion tooltips are informative.
++- For database writes, enforce ACID-compliant transactions and avoid partial writes.
++- Prefer idempotent write operations when retries are possible.
+diff --git a/rulesets/python-fastapi/PROJECT_RULES.md b/rulesets/python-fastapi/PROJECT_RULES.md
+--- a/rulesets/python-fastapi/PROJECT_RULES.md
++++ b/rulesets/python-fastapi/PROJECT_RULES.md
+@@ -2,6 +2,14 @@
+ 
+ ## Goals
+ - Clean, typed Python; predictable APIs; safe dependency management.
++
++## Engineering Best Practices
++- **Design:** Apply SOLID where applicable; prefer composition over inheritance; keep responsibilities small.
++- **Public API documentation (Tooltip-friendly):** Public modules, classes, and functions MUST include
++  docstrings that work well in IDE tooltips.
++  - Include: 1-line summary, Args/Returns/Raises (as applicable), and important edge cases.
++- **Data integrity (ACID / DB writes):** If the project performs database writes,
++  multi-step writes MUST use explicit transactions with clear commit/rollback boundaries.
+ 
+ ## Style & Tooling
+ - Use type hints broadly; keep code mypy/pyright-friendly.
+diff --git a/rulesets/python-fastapi/copilot-instructions.md b/rulesets/python-fastapi/copilot-instructions.md
+--- a/rulesets/python-fastapi/copilot-instructions.md
++++ b/rulesets/python-fastapi/copilot-instructions.md
+@@ -6,3 +6,6 @@
+ - Use Depends() for db/auth/config.
+ - Add type hints.
+ - Add pytest tests for new endpoints and service logic.
++
++- Ensure public functions/classes/modules include clear docstrings visible in code completion tooltips.
++- For database writes, enforce ACID-friendly transaction boundaries and avoid partial writes.
+diff --git a/rulesets/go/PROJECT_RULES.md b/rulesets/go/PROJECT_RULES.md
+--- a/rulesets/go/PROJECT_RULES.md
++++ b/rulesets/go/PROJECT_RULES.md
+@@ -2,6 +2,14 @@
+ 
+ ## Goals
+ - Idiomatic Go, small interfaces, clear errors, fast builds.
++
++## Engineering Best Practices
++- **Design:** Apply SOLID intent where appropriate; prefer composition and small interfaces.
++- **Public API documentation (Tooltip-friendly):** Exported identifiers MUST include GoDoc comments
++  (starting with the identifier name) so IDE tooltips are informative.
++  - Include: concise summary, non-obvious parameters/returns, and important edge cases.
++- **Data integrity (ACID / DB writes):** If the project performs database writes,
++  multi-step writes MUST be executed within explicit transactions.
+ 
+ ## Style
+ - gofmt required; goimports for imports.
+diff --git a/rulesets/go/copilot-instructions.md b/rulesets/go/copilot-instructions.md
+--- a/rulesets/go/copilot-instructions.md
++++ b/rulesets/go/copilot-instructions.md
+@@ -6,3 +6,6 @@
+ - Wrap errors with %w and add context.
+ - Format with gofmt/goimports.
+ - Add table-driven tests.
++
++- Add GoDoc comments for all exported identifiers so code completion tooltips are helpful.
++- For database writes, enforce ACID-friendly transaction boundaries and avoid partial writes.
+diff --git a/rulesets/dotnet/PROJECT_RULES.md b/rulesets/dotnet/PROJECT_RULES.md
+--- a/rulesets/dotnet/PROJECT_RULES.md
++++ b/rulesets/dotnet/PROJECT_RULES.md
+@@ -2,6 +2,14 @@
+ 
+ ## Goals
+ - Clean boundaries, safe async, consistent APIs, strong DI.
++
++## Engineering Best Practices
++- **Design:** Apply SOLID where applicable; prefer composition over inheritance; keep responsibilities small.
++- **Public API documentation (Tooltip-friendly):** Public APIs MUST include XML documentation comments
++  (`/// <summary>...</summary>`) so IntelliSense tooltips explain intent.
++  - Include: `<summary>`, `<param>`, `<returns>`, `<exception>` (if relevant), and important edge cases.
++- **Data integrity (ACID / DB writes):** If the project performs database writes,
++  multi-step writes MUST be executed within explicit transactions with clear commit/rollback boundaries.
+ 
+ ## Style
+ - Enable nullable reference types.
+diff --git a/rulesets/dotnet/copilot-instructions.md b/rulesets/dotnet/copilot-instructions.md
+--- a/rulesets/dotnet/copilot-instructions.md
++++ b/rulesets/dotnet/copilot-instructions.md
+@@ -6,3 +6,6 @@
+ - Prefer async/await; avoid blocking calls.
+ - Return ProblemDetails for errors.
+ - Add unit tests for services; integration tests for endpoints where relevant.
++
++- Ensure public APIs include XML doc comments suitable for IntelliSense tooltips.
++- For database writes, enforce ACID-friendly transaction boundaries and avoid partial writes.

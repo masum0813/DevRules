@@ -97,3 +97,15 @@ curl -fsSL https://raw.githubusercontent.com/masum0813/DevRules/main/tools/boots
 > Notes:
 > - Requires Node.js 18+ (for built-in `fetch`).
 > - Replace the URL owner/repo/branch if you fork DevRules.
+
+## Best Practices (applied by rulesets)
+
+The following engineering principles are enforced through the rulesets and Copilot instructions:
+
+- **Design:** SOLID principles with a composition-first approach (avoid deep inheritance).
+- **Documentation (Public only):** All public/exported APIs must include tooltip-friendly documentation
+  (JSDoc, docstrings, XML docs, Swift `///`, GoDoc).
+- **Code Completion Friendly:** Documentation must be written so IDE code completion tooltips clearly
+  explain intent, parameters, return values, and important edge cases.
+- **Data Integrity:** If a project performs database writes, **ACID-compliant transactional boundaries**
+  are mandatory (no partial writes).

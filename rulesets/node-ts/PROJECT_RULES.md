@@ -3,6 +3,14 @@
 ## Goals
 - Production-grade TypeScript, predictable runtime behavior, strong typing.
 
+## Engineering Best Practices
+- **Design:** Apply SOLID where applicable; prefer composition over inheritance; keep responsibilities small.
+- **Public API documentation (Tooltip-friendly):** All exported/public APIs MUST include JSDoc (`/** ... */`)
+  so code completion tooltips clearly explain intent.
+  - Include: 1-line summary, `@param` descriptions, `@returns` / `@throws`, and important edge cases.
+- **Data integrity (ACID / DB writes):** If the project performs database writes,
+  multi-step writes MUST run inside explicit transactions with commit/rollback semantics.
+
 ## Language & Runtime
 - Use TypeScript (no implicit `any`).
 - Prefer a single module system consistently (match repo).
