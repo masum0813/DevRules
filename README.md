@@ -2,6 +2,39 @@
 
 This folder is your single source of truth for project rules + VS Code settings.
 
+## Doc comment templates (Tooltip-friendly)
+
+These templates help ensure public/exported APIs always show clear information in IDE code-completion tooltips.
+
+- TypeScript / JavaScript (JSDoc): `shared/doc-templates/jsdoc.md`
+- C# / .NET (XML Docs): `shared/doc-templates/dotnet-xml-docs.md`
+- Swift (Xcode Quick Help): `shared/doc-templates/swift-doc-comments.md`
+- Go (GoDoc): `shared/doc-templates/godoc.md`
+- Python (Docstrings): `shared/doc-templates/python-docstrings.md`
+
+## ACID violation checklist (DB write mandatory)
+
+If a project performs database writes, these checks define what counts as an ACID/transaction boundary violation:
+
+- `shared/acid-violation-checklist.md`
+
+## Copilot self-correction prompt
+
+If Copilot/Codex generates code that violates project rules (public API docs, DB transaction boundaries, SOLID/composition),
+use this prompt as a standard “regenerate correctly” instruction:
+
+- `shared/copilot-self-correction-prompt.md`
+
+## Doc comment templates (Tooltip-friendly)
+
+These templates help ensure public/exported APIs always show clear information in IDE code-completion tooltips.
+
+- TypeScript / JavaScript (JSDoc): `shared/doc-templates/jsdoc.md`
+- C# / .NET (XML Docs): `shared/doc-templates/dotnet-xml-docs.md`
+- Swift (Xcode Quick Help): `shared/doc-templates/swift-doc-comments.md`
+- Go (GoDoc): `shared/doc-templates/godoc.md`
+- Python (Docstrings): `shared/doc-templates/python-docstrings.md`
+
 ## What it provides
 - `rulesets/<name>/PROJECT_RULES.md`
 - `rulesets/<name>/copilot-instructions.md` -> copied into repo as `.github/copilot-instructions.md`
