@@ -66,6 +66,16 @@ function writeFile(dest, content) {
     console.warn(`==> stripped BOM: ${dest}`);
     content = content.slice(1);
   }
+  // If the first non-whitespace line is a shebang, ensure it starts at byte 0.
+  if (/^\s*#!\//.test(content) && !content.startsWith("#!")) {
+    console.warn(`==> normalized shebang offset: ${dest}`);
+    content = content.replace(/^\s+/, "");
+  }
+  // Defensive: drop a stray leading backslash before a shebang (seen in some broken patches).
+  if (content.startsWith("\\\n#!") || content.startsWith("\\\r\n#!")) {
+    console.warn(`==> removed stray prefix before shebang: ${dest}`);
+    content = content.replace(/^\\\\\r?\n/, "");
+  }
   ensureDir(path.dirname(dest));
   fs.writeFileSync(dest, content, "utf-8");
 }
