@@ -11,6 +11,11 @@
 - **Data integrity (ACID / DB writes):** If the project performs database writes,
   multi-step writes MUST run inside explicit transactions with commit/rollback semantics.
 
+## See also
+- JSDoc templates (TS/JS): ../../shared/doc-templates/jsdoc.md
+- ACID violation checklist (DB writes): ../../shared/acid-violation-checklist.md
+- Copilot self-correction prompt: ../../shared/copilot-self-correction-prompt.md
+
 ## Language & Runtime
 - Use TypeScript (no implicit `any`).
 - Prefer a single module system consistently (match repo).

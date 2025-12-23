@@ -11,6 +11,11 @@
 - **Data integrity (ACID / DB writes):** If the project performs database writes,
   multi-step writes MUST use explicit transactions with clear commit/rollback boundaries.
 
+## See also
+- Python docstring templates: ../../shared/doc-templates/python-docstrings.md
+- ACID violation checklist (DB writes): ../../shared/acid-violation-checklist.md
+- Copilot self-correction prompt: ../../shared/copilot-self-correction-prompt.md
+
 ## Style & Tooling
 - Use type hints broadly; keep code mypy/pyright-friendly.
 - Lint with ruff; format with black (or ruff-format if the repo uses it).

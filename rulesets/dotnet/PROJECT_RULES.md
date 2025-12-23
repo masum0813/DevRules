@@ -11,6 +11,11 @@
 - **Data integrity (ACID / DB writes):** If the project performs database writes,
   multi-step writes MUST be executed within explicit transactions with clear commit/rollback boundaries.
 
+## See also
+- .NET XML doc templates: ../../shared/doc-templates/dotnet-xml-docs.md
+- ACID violation checklist (DB writes): ../../shared/acid-violation-checklist.md
+- Copilot self-correction prompt: ../../shared/copilot-self-correction-prompt.md
+
 ## Style
 - Enable nullable reference types.
 - Avoid `async void` (except event handlers).

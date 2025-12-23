@@ -12,6 +12,11 @@
 - **Data integrity (ACID / DB writes):** If this project performs database or persistent writes,
   write operations MUST be transactional with explicit commit/rollback boundaries.
 
+## See also
+- Swift doc comment templates (Xcode Quick Help): ../../shared/doc-templates/swift-doc-comments.md
+- ACID violation checklist (DB writes): ../../shared/acid-violation-checklist.md
+- Copilot self-correction prompt: ../../shared/copilot-self-correction-prompt.md
+
 ## Language & Style
 - Swift 5.9+ (or current toolchain used by the repo).
 - Follow Swift API Design Guidelines.

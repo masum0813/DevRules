@@ -11,6 +11,11 @@
 - **Data integrity (ACID / DB writes):** If the project performs database writes,
   multi-step writes MUST be executed within explicit transactions.
 
+## See also
+- GoDoc templates: ../../shared/doc-templates/godoc.md
+- ACID violation checklist (DB writes): ../../shared/acid-violation-checklist.md
+- Copilot self-correction prompt: ../../shared/copilot-self-correction-prompt.md
+
 ## Style
 - gofmt required; goimports for imports.
 - Wrap errors with context using `%w`.
