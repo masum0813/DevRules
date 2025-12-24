@@ -9,6 +9,8 @@
  *   node /path/to/DevRules/tools/install-to-repo.mjs
  *   node /path/to/DevRules/tools/install-to-repo.mjs --force
  *   node /path/to/DevRules/tools/install-to-repo.mjs --rules python-fastapi
+ *   node /path/to/DevRules/tools/install-to-repo.mjs --rules node-ts@apps/web --rules python-fastapi@services/api
+ *   node /path/to/DevRules/tools/install-to-repo.mjs --rules node-js@frontend,python-fastapi@backend
  *
  * What it does:
  * 1) Runs apply-rules.mjs (detect ruleset or use --rules)
@@ -26,7 +28,7 @@ const __dirname = new URL(".", import.meta.url).pathname;
 function parseArgs(argv) {
   const args = {
     repo: process.cwd(),
-    rules: null,
+    rules: [],
     force: false,
     dryRun: false,
     withMakefile: true,
@@ -38,7 +40,11 @@ function parseArgs(argv) {
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--repo") args.repo = argv[++i];
-    else if (a === "--rules") args.rules = argv[++i];
+    else if (a === "--rules") {
+      const value = argv[++i];
+      if (!value) continue;
+      args.rules.push(value);
+    }
     else if (a === "--force") args.force = true;
     else if (a === "--dry-run") args.dryRun = true;
     else if (a === "--no-makefile") args.withMakefile = false;
@@ -121,10 +127,52 @@ function patchPackageJsonScripts(repo, devrulesDir, force, dryRun) {
   else console.log("No changes to package.json scripts.");
 }
 
+function parseRuleTargets(repo, ruleArgs, dryRun) {
+  if (!ruleArgs.length) {
+    return [{ repoPath: repo, relLabel: ".", ruleset: null }];
+  }
+
+  const targets = [];
+  for (const raw of ruleArgs) {
+    const segments = raw.split(",").map(s => s.trim()).filter(Boolean);
+    for (const segment of segments) {
+      const atIndex = segment.indexOf("@");
+      let ruleset = segment;
+      let rel = ".";
+      if (atIndex >= 0) {
+        ruleset = segment.slice(0, atIndex);
+        rel = segment.slice(atIndex + 1);
+      }
+      ruleset = ruleset.trim();
+      rel = (rel ?? ".").trim() || ".";
+
+      if (!ruleset) {
+        console.error(`Invalid --rules value: "${segment}". Use ruleset[@subdir].`);
+        process.exit(2);
+      }
+
+      const targetPath = path.resolve(repo, rel);
+      if (!dryRun && !exists(targetPath)) {
+        console.error(`Target path not found for --rules value "${segment}": ${targetPath}`);
+        process.exit(2);
+      }
+      if (dryRun && !exists(targetPath)) {
+        console.warn(`WARN  target path missing (dry-run): ${targetPath}`);
+      }
+
+      const relLabel = path.relative(repo, targetPath) || ".";
+      targets.push({ repoPath: targetPath, relLabel, ruleset });
+    }
+  }
+
+  return targets;
+}
+
 function main() {
   const args = parseArgs(process.argv);
   if (args.help) {
-    console.log(`Usage: node tools/install-to-repo.mjs [--repo PATH] [--rules NAME] [--force] [--dry-run]
+    console.log(`Usage: node tools/install-to-repo.mjs [--repo PATH] [--rules NAME[@subdir]] [--force] [--dry-run]
+  --rules         Repeat or comma-separate to target multiple subdirectories
   --no-makefile   Do not copy Makefile template
   --no-justfile   Do not copy justfile template
   --no-npm        Do not patch package.json scripts (if package.json exists)
@@ -133,6 +181,7 @@ function main() {
   }
 
   const repo = path.resolve(args.repo);
+  const ruleTargets = parseRuleTargets(repo, args.rules, args.dryRun);
 
   // DevRules root is one level above tools/
   const devrulesRoot = path.resolve(path.join(__dirname, ".."));
@@ -144,16 +193,20 @@ function main() {
     process.exit(2);
   }
 
-  // 1) Run apply-rules.mjs
-  const cmdArgs = [applyScript, "--repo", repo];
-  if (args.rules) cmdArgs.push("--rules", args.rules);
-  if (args.force) cmdArgs.push("--force");
-  if (args.dryRun) cmdArgs.push("--dry-run");
+  // 1) Run apply-rules.mjs for each requested target
+  for (const target of ruleTargets) {
+    const cmdArgs = [applyScript, "--repo", target.repoPath];
+    if (target.ruleset) cmdArgs.push("--rules", target.ruleset);
+    if (args.force) cmdArgs.push("--force");
+    if (args.dryRun) cmdArgs.push("--dry-run");
 
-  console.log(`\n==> Applying rules (repo: ${repo})`);
-  const res = spawnSync(process.execPath, cmdArgs, { stdio: "inherit" });
-  if (res.status !== 0) {
-    process.exit(res.status ?? 2);
+    const label = target.relLabel;
+    const ruleLabel = target.ruleset ?? "auto-detect";
+    console.log(`\n==> Applying rules (${ruleLabel} @ ${label})`);
+    const res = spawnSync(process.execPath, cmdArgs, { stdio: "inherit" });
+    if (res.status !== 0) {
+      process.exit(res.status ?? 2);
+    }
   }
 
   // 2) Copy templates (Makefile / justfile)

@@ -94,6 +94,21 @@ Disable package.json script patching:
 node /path/to/DevRules/tools/install-to-repo.mjs --no-npm
 ```
 
+### Multiple rulesets (monorepos)
+
+Apply more than one ruleset by repeating `--rules` or providing comma-separated values, optionally scoped to a subdirectory with `@subdir`:
+
+```bash
+node /path/to/DevRules/tools/install-to-repo.mjs \
+  --rules node-ts@apps/frontend \
+  --rules python-fastapi@services/api
+
+# Equivalent single flag
+node /path/to/DevRules/tools/install-to-repo.mjs --rules node-ts@apps/frontend,python-fastapi@services/api
+```
+
+Each `@subdir` is resolved relative to `--repo` (default `.`). When omitted, the ruleset applies to the root of `--repo`.
+
 ## One-line curl bootstrap (cross-platform)
 
 If you host DevRules on GitHub and want to install it into a target repo without cloning DevRules locally, use the Node-based bootstrap.
@@ -114,6 +129,20 @@ Force a specific ruleset:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/masum0813/DevRules/main/tools/bootstrap.mjs | node - -- --repo . --rules python-fastapi
+```
+
+Multiple rulesets in one pass:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/masum0813/DevRules/main/tools/bootstrap.mjs | \
+  node - -- --repo . --rules node-ts@apps/frontend --rules python-fastapi@services/api
+```
+
+You can also comma-separate the `--rules` flag if you prefer a single argument:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/masum0813/DevRules/main/tools/bootstrap.mjs | \
+  node - -- --repo . --rules node-ts@apps/frontend,python-fastapi@services/api
 ```
 
 Disable Makefile/justfile install:
