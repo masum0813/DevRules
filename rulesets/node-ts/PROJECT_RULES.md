@@ -30,6 +30,11 @@
 - Keep layers separated: routes/controllers, services, repositories, domain, utils.
 - Controllers must not contain DB logic; call services.
 
+## Models (Query outputs)
+- Strongly prefer mapping query results to TypeScript model classes / interfaces (`Column`, `Table`, `StoredProcedure`).
+- Benefits: type safety, centralized parsing/validation, helper methods (`toCreateScript()`), and easier tests.
+- Minimal pattern (TS): place models in `src/models/` and map `queries.ts` outputs with `rows.map(r => Table.fromRows(rows))`.
+
 ## Validation & Errors
 - Validate external inputs (HTTP, queue, env) with a schema library (zod/yup/etc).
 - Centralized error handling; consistent error response shape.

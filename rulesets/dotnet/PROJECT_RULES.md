@@ -30,6 +30,11 @@
 - Use ProblemDetails for Web APIs.
 - Do not expose internal exception details to clients.
 
+## Models (Query outputs)
+- Map raw query results to small POCO model classes (`Column`, `Table`, `StoredProcedure`) instead of returning unstructured rows.
+- Benefits: centralized parsing/validation, helper methods (e.g., `ToCreateScript()`), clearer controller responses, and easier unit testing.
+- Minimal pattern (C#): place models under `Models/` and map query outputs in services (`rows.Select(r => new Table(...))`).
+
 ## Security
 - Secrets from config providers / env; never hardcode.
 - Enforce authorization policies at endpoints.

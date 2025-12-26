@@ -30,6 +30,11 @@
 - Keep layers separated: routes/controllers, services, repositories, domain, utils.
 - Controllers must not contain DB logic; call services.
 
+## Models (Query outputs)
+- Map raw query results to small model classes (`Column`, `Table`, `StoredProcedure`) instead of returning unstructured rows.
+- Benefits: clearer presentation, centralized parsing/validation, helper methods (e.g., `toCreateScript()`), and easier testing.
+- Minimal pattern (JS): place models in `src/models/` and map `queries.js` outputs with `rows.map(r => new Table(r))`.
+
 ## Validation & Errors
 - Validate external inputs (HTTP, queue, env) with a schema library (zod/yup/etc).
 - Centralized error handling; consistent error response shape.

@@ -9,3 +9,7 @@
 
 - For database writes, enforce ACID-compliant transactions and avoid partial writes.
 - Prefer idempotent write operations when retries are possible.
+
+# Model generation guidance
+- When queries return complex rows, generate model classes and map outputs to them in routers.
+- Prompt: "Map query results to model constructors (Column, Table, StoredProcedure). Add helper methods and validations. Place models in `src/models/`."

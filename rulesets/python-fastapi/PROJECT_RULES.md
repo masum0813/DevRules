@@ -38,3 +38,8 @@
 ## Testing
 - pytest.
 - Test routers with TestClient; mock external deps.
+
+## Models (Query outputs)
+- Map raw DB/query rows to Pydantic models (`Column`, `Table`, `StoredProcedure`) rather than returning unstructured dicts.
+- Benefits: clearer response contracts, centralized parsing/validation, helper methods (`to_create_script()`), and easier tests.
+- Minimal pattern (Python): place models in `app/models.py` or `app/models/` and map query outputs in services (`Table.from_rows(rows)`).

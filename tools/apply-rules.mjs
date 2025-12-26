@@ -213,6 +213,41 @@ function main() {
   // EditorConfig (shared)
   copyFile(path.join(root, "shared", ".editorconfig"), path.join(repo, ".editorconfig"), args.force, args.dryRun);
 
+  // Copy ruleset templates if present (to templates/devrules/<rules>/)
+  const templatesDir = path.join(rulesetDir, "templates");
+  if (exists(templatesDir)) {
+    const destTemplates = path.join(repo, "templates", "devrules", rules);
+    // recursively copy files
+    function copyDir(srcDir, dstDir) {
+      const items = safeReaddir(srcDir);
+      for (const it of items) {
+        const srcPath = path.join(srcDir, it);
+        const dstPath = path.join(dstDir, it);
+        const stat = fs.statSync(srcPath);
+        if (stat.isDirectory()) {
+          copyDir(srcPath, dstPath);
+        } else {
+          if (exists(dstPath) && !args.force) {
+            appendOrSkip(srcPath, dstPath);
+          } else {
+            copyFile(srcPath, dstPath, args.force, args.dryRun);
+          }
+        }
+      }
+    }
+
+    function appendOrSkip(srcPath, dstPath) {
+      // For simple templates, prefer copying a new file with suffix if exists; here we skip to avoid overwriting
+      if (args.dryRun) {
+        log("dry-run", `would skip existing template: ${dstPath}`);
+      } else {
+        log("skip", `template exists: ${dstPath}`);
+      }
+    }
+
+    copyDir(templatesDir, destTemplates);
+  }
+
   // Merge VS Code settings: base + ruleset override
   const base = readJSON(baseSettingsPath);
   const override = readJSON(path.join(rulesetDir, "vscode.settings.json"));
