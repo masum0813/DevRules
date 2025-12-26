@@ -117,6 +117,50 @@ function copyFile(src, dest, force, dryRun) {
   log("copy", dest);
 }
 
+function smartCopy(src, dest, force, dryRun) {
+  const textExts = new Set(['.md', '.txt', '.ini', '.editorconfig', '.gitignore', '.yml', '.yaml', '.env', '.instructions', '.py', '.js', '.ts', '.cs']);
+  const ext = path.extname(dest).toLowerCase();
+
+  if (!exists(dest)) {
+    return copyFile(src, dest, force, dryRun);
+  }
+
+  if (force) {
+    return copyFile(src, dest, force, dryRun);
+  }
+
+  // If both JSON, merge
+  if (ext === '.json') {
+    try {
+      const srcObj = readJSON(src);
+      let destObj = {};
+      try { destObj = readJSON(dest); } catch {}
+      const mergedObj = mergeDeep(destObj, srcObj);
+      // preserve special nested merges
+      if (destObj['editor.codeActionsOnSave'] || srcObj['editor.codeActionsOnSave']) {
+        mergedObj['editor.codeActionsOnSave'] = mergeDeep(destObj['editor.codeActionsOnSave'] ?? {}, srcObj['editor.codeActionsOnSave'] ?? {});
+      }
+      for (const k of Object.keys(srcObj)) {
+        if (k.startsWith('[') && k.endsWith(']')) {
+          mergedObj[k] = mergeDeep(destObj[k] ?? {}, srcObj[k] ?? {});
+        }
+      }
+      return writeJSON(dest, mergedObj, true, dryRun);
+    } catch (e) {
+      log('warn', `json-merge-failed for ${dest}: ${e.message}`);
+      return;
+    }
+  }
+
+  // Append patterns for gitignore or other plain text files
+  if (textExts.has(ext) || path.basename(dest) === '.gitignore' || path.basename(dest).endsWith('PROJECT_RULES.md') || path.basename(dest).endsWith('copilot-instructions.md')) {
+    return appendUniqueFile(src, dest, dryRun);
+  }
+
+  // Default: skip to avoid overwriting code/binary files
+  log('skip', `destination exists, not overwriting: ${dest}`);
+}
+
 function appendUniqueFile(src, dest, dryRun) {
   const srcText = fs.readFileSync(src, "utf-8");
   let destText = "";
@@ -195,23 +239,17 @@ function main() {
     process.exit(2);
   }
 
-  // Copy text rules
-  copyFile(path.join(rulesetDir, "PROJECT_RULES.md"), path.join(repo, "PROJECT_RULES.md"), args.force, args.dryRun);
-  copyFile(path.join(rulesetDir, "copilot-instructions.md"), path.join(repo, ".github", "copilot-instructions.md"), args.force, args.dryRun);
+  // Copy text rules (smart copy: merge/append when possible)
+  smartCopy(path.join(rulesetDir, "PROJECT_RULES.md"), path.join(repo, "PROJECT_RULES.md"), args.force, args.dryRun);
+  smartCopy(path.join(rulesetDir, "copilot-instructions.md"), path.join(repo, ".github", "copilot-instructions.md"), args.force, args.dryRun);
 
   // Copy ruleset .gitignore if present (language/framework-specific ignore patterns)
   if (exists(path.join(rulesetDir, ".gitignore"))) {
-    const srcIgnore = path.join(rulesetDir, ".gitignore");
-    const destIgnore = path.join(repo, ".gitignore");
-    if (exists(destIgnore) && !args.force) {
-      appendUniqueFile(srcIgnore, destIgnore, args.dryRun);
-    } else {
-      copyFile(srcIgnore, destIgnore, args.force, args.dryRun);
-    }
+    smartCopy(path.join(rulesetDir, ".gitignore"), path.join(repo, ".gitignore"), args.force, args.dryRun);
   }
 
   // EditorConfig (shared)
-  copyFile(path.join(root, "shared", ".editorconfig"), path.join(repo, ".editorconfig"), args.force, args.dryRun);
+  smartCopy(path.join(root, "shared", ".editorconfig"), path.join(repo, ".editorconfig"), args.force, args.dryRun);
 
   // Copy ruleset templates if present (to templates/devrules/<rules>/)
   const templatesDir = path.join(rulesetDir, "templates");
@@ -265,7 +303,30 @@ function main() {
     }
   }
 
-  writeJSON(path.join(repo, ".vscode", "settings.json"), merged, args.force, args.dryRun);
+  const destSettingsPath = path.join(repo, ".vscode", "settings.json");
+  if (exists(destSettingsPath) && !args.force) {
+    log("merge", `merging existing settings: ${destSettingsPath}`);
+    let existingSettings = {};
+    try { existingSettings = readJSON(destSettingsPath); } catch (e) { log("warn", `failed reading existing settings: ${e.message}`); existingSettings = {}; }
+
+    // merged should override existing where provided
+    let finalSettings = mergeDeep(existingSettings, merged);
+
+    // special merge for nested codeActions block
+    if (existingSettings["editor.codeActionsOnSave"] || merged["editor.codeActionsOnSave"]) {
+      finalSettings["editor.codeActionsOnSave"] = mergeDeep(existingSettings["editor.codeActionsOnSave"] ?? {}, merged["editor.codeActionsOnSave"] ?? {});
+    }
+
+    for (const k of Object.keys(merged)) {
+      if (k.startsWith("[") && k.endsWith("]")) {
+        finalSettings[k] = mergeDeep(existingSettings[k] ?? {}, merged[k] ?? {});
+      }
+    }
+
+    writeJSON(destSettingsPath, finalSettings, true, args.dryRun);
+  } else {
+    writeJSON(destSettingsPath, merged, args.force, args.dryRun);
+  }
 
   console.log(`\nDone. Applied ruleset: ${rules}`);
 }
