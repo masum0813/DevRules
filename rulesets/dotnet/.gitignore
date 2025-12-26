@@ -1,0 +1,19 @@
+# DevRules: dotnet ruleset ignores
+# Build outputs
+bin/
+obj/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+
+# NuGet
+*.nupkg
+
+# Runtime / temp
+*.log
+
+# App settings & secrets - avoid scanning committed config files
+appsettings.json
+appsettings.*.json

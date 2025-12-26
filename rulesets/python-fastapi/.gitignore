@@ -1,0 +1,24 @@
+# DevRules: python-fastapi ruleset ignores
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Distribution/build
+build/
+dist/
+*.egg-info/
+
+# Python logs
+pip-log.txt
+
+# Environment / secrets - do not commit
+.env
+.env.*
+.env.local
+.env.*.local

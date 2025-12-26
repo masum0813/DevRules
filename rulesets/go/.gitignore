@@ -1,0 +1,24 @@
+# DevRules: go ruleset ignores
+# Build outputs
+bin/
+pkg/
+
+# Vendor and dependencies
+vendor/
+
+# Editor configs
+.vscode/
+.idea/
+
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Coverage
+coverage.out
+
+# Environment / secrets
+.env
+.env.*

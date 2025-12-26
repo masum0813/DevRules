@@ -98,32 +98,78 @@ function ensureDir(p) {
   fs.mkdirSync(p, { recursive: true });
 }
 
+function log(action, detail) {
+  const time = new Date().toISOString();
+  console.log(`[DevRules] ${time} | ${action} | ${detail}`);
+}
+
 function copyFile(src, dest, force, dryRun) {
   if (exists(dest) && !force) {
-    console.log(`SKIP  (exists): ${dest}`);
+    log("skip", `exists: ${dest}`);
     return;
   }
   if (dryRun) {
-    console.log(`COPY  ${src} -> ${dest}`);
+    log("dry-run", `would copy: ${src} -> ${dest}`);
     return;
   }
   ensureDir(path.dirname(dest));
   fs.copyFileSync(src, dest);
-  console.log(`COPIED: ${dest}`);
+  log("copy", dest);
+}
+
+function appendUniqueFile(src, dest, dryRun) {
+  const srcText = fs.readFileSync(src, "utf-8");
+  let destText = "";
+  try { destText = fs.readFileSync(dest, "utf-8"); } catch { destText = ""; }
+
+  const normalize = (s) => s.replace(/[\r\n]+$/, "");
+  const srcLines = srcText.split(/\r?\n/).map(l => normalize(l));
+  const destLinesSet = new Set(destText.split(/\r?\n/).map(l => normalize(l)));
+
+  const toAppend = [];
+  for (const line of srcLines) {
+    if (line.trim() === "") {
+      // avoid appending duplicate consecutive blank lines
+      if (toAppend.length === 0) {
+        const destEndsBlank = destText.endsWith("\n\n") || destText.trim() === "";
+        if (!destEndsBlank) toAppend.push(line);
+      } else {
+        if (toAppend[toAppend.length - 1].trim() !== "") toAppend.push(line);
+      }
+    } else if (!destLinesSet.has(line)) {
+      toAppend.push(line);
+    }
+  }
+
+  if (toAppend.length === 0) {
+    log("skip", `no new patterns for: ${dest}`);
+    return;
+  }
+
+  if (dryRun) {
+    log("dry-run", `would append from ${src} -> ${dest}`);
+    toAppend.forEach(l => console.log(`    + ${l}`));
+    return;
+  }
+
+  ensureDir(path.dirname(dest));
+  const prefix = destText === "" || destText.endsWith("\n") ? "" : "\n";
+  fs.appendFileSync(dest, prefix + toAppend.join("\n") + "\n", "utf-8");
+  log("append", dest);
 }
 
 function writeJSON(dest, obj, force, dryRun) {
   if (exists(dest) && !force) {
-    console.log(`SKIP  (exists): ${dest}`);
+    log("skip", `exists: ${dest}`);
     return;
   }
   if (dryRun) {
-    console.log(`WRITE ${dest}`);
+    log("dry-run", `would write: ${dest}`);
     return;
   }
   ensureDir(path.dirname(dest));
   fs.writeFileSync(dest, JSON.stringify(obj, null, 2) + "\n", "utf-8");
-  console.log(`WROTE : ${dest}`);
+  log("write", dest);
 }
 
 function main() {
@@ -152,6 +198,17 @@ function main() {
   // Copy text rules
   copyFile(path.join(rulesetDir, "PROJECT_RULES.md"), path.join(repo, "PROJECT_RULES.md"), args.force, args.dryRun);
   copyFile(path.join(rulesetDir, "copilot-instructions.md"), path.join(repo, ".github", "copilot-instructions.md"), args.force, args.dryRun);
+
+  // Copy ruleset .gitignore if present (language/framework-specific ignore patterns)
+  if (exists(path.join(rulesetDir, ".gitignore"))) {
+    const srcIgnore = path.join(rulesetDir, ".gitignore");
+    const destIgnore = path.join(repo, ".gitignore");
+    if (exists(destIgnore) && !args.force) {
+      appendUniqueFile(srcIgnore, destIgnore, args.dryRun);
+    } else {
+      copyFile(srcIgnore, destIgnore, args.force, args.dryRun);
+    }
+  }
 
   // EditorConfig (shared)
   copyFile(path.join(root, "shared", ".editorconfig"), path.join(repo, ".editorconfig"), args.force, args.dryRun);
