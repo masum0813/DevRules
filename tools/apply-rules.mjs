@@ -14,6 +14,24 @@ import process from "node:process";
 
 const __dirname = new URL(".", import.meta.url).pathname;
 
+// Prompt templates: used to instruct GPT agents to find the latest stable
+// versions for packages that were added by prior GPT actions, and produce
+// concrete manifest changes (package.json, requirements.txt, go.mod, .csproj).
+// These are written in Turkish (can be adapted) and designed to be used as
+// the 'system' or 'user' prompt when asking a GPT to perform the version lookup
+// and produce a minimal, machine-readable output (JSON + patch instructions).
+const LATEST_VERSION_PROMPTS = Object.freeze({
+  npm: `Aşağıdaki görevleri sırayla yap: 1) Sana verilen repoda (veya verilen değişiklik listesinde) yalnızca "yeni eklenen" veya "GPT tarafından önerilen" npm paketlerini tespit et. 2) Her paket için npm registry (https://registry.npmjs.org/) üzerinden en son STABLE sürümü bul — prerelease (-alpha, -beta, -rc) atla. 3) Her bağımlılık için şu JSON çıktısını üret: {"name":"<paket>", "current_spec": "<mevcut veya null>", "latest":"<x.y.z>", "registry":"https://www.npmjs.com/package/<pkg>", "recommended_change": {"file":"package.json","path":"/dependencies/<pkg>","value":"^x.y.z"}, "install":"npm install <pkg>@^x.y.z"}. 4) Eğer major sürüm yükseltmesi gerekiyorsa bunu ayrı bir alanla belirt: "majorUpgrade": true ve olası uyumluluk notu ekle. 5) Sadece paketlerin listesini ve JSON çıktısını ver; özgür metin özet kısa olacaksa alt bölümde ver.`,
+
+  pip: `Yapılacaklar: 1) Verilen proje veya değişikliklerde pip/requirements.txt veya pyproject.toml ile eklenmiş yeni paketleri tespit et. 2) PyPI JSON API (https://pypi.org/pypi/<pkg>/json) kullanarak en son STABLE sürümü al; pre-release sürümleri atla. 3) Her paket için şu JSON formatını döndür: {"name":"<pkg>", "current_spec":"<mevcut veya null>", "latest":"<x.y.z>", "pypi_url":"https://pypi.org/project/<pkg>/", "recommended_change": {"file":"requirements.txt" or "pyproject.toml","change":"<satır veya toml snippet>"}, "install":"pip install <pkg>==<x.y.z>"}. 4) Eğer paket adına belirsizlik varsa alternatif isim öner ve emin olmadığını belirt.`,
+
+  go: `Görev: 1) go.mod içinde veya değişikliklerde GPT tarafından eklenmiş yeni modları tespit et. 2) Go proxy (proxy.golang.org) veya pkg.go.dev üzerinden en son stabil sürümü bul. 3) JSON çıktı: {"module":"<mod>", "current":"<mevcut veya null>", "latest":"vX.Y.Z", "proxy_url":"https://pkg.go.dev/<mod>", "recommended_change": {"file":"go.mod","replace":"require <mod> vX.Y.Z"}, "install":"go get <mod>@vX.Y.Z"}. 4) Eğer major versiyon değişimi varsa uyumluluk notu ekle.`,
+
+  nuget: `Talimatlar: 1) .csproj veya paket değişikliklerinde GPT tarafından eklenmiş NuGet paketlerini tespit et. 2) nuget.org API (https://api.nuget.org/v3/index.json ve ilgili paketler) kullanarak en son STABLE sürümü bul (prerelease atla). 3) Üretilecek JSON: {"id":"<paket>", "current":"<mevcut veya null>", "latest":"<x.y.z>", "nuget_url":"https://www.nuget.org/packages/<id>/", "recommended_change": {"file":"Project.csproj","xmlPatch":"<PackageReference Include=\"<id>\" Version=\"<x.y.z>\" />"}, "install":"dotnet add package <id> --version <x.y.z>"}. 4) Major yükseltmeleri açıkça işaretle.`,
+
+  generic: `Genel kural seti: 1) Sadece GPT eylemiyle (action) eklenmiş yeni bağımlılıkları hedefle. 2) Her paket için kayıt kaynağını (registry) sor ve stable/latest sürümü getirt. 3) Çıktıyı makine tarafından parse edilebilir JSON listesi olarak ver. 4) Ayrıca uygulanabilir küçük patch (package.json diff, requirements satırı, go.mod require, .csproj PackageReference) üret. 5) Eğer bir paket registry'de bulunamazsa bunu belirt ve alternatif arama anahtarları öner.`
+});
+
 function parseArgs(argv) {
   const args = { repo: process.cwd(), rules: null, force: false, dryRun: false };
   for (let i = 2; i < argv.length; i++) {

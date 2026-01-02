@@ -1,3 +1,29 @@
+Copilot / AI Assistant Guidelines — Prevent Duplicate Implementations (.NET)
+
+Purpose:
+- Prefer reuse of existing assemblies/types and methods before adding new implementations in .NET projects.
+
+Language-specific guidance:
+- Search C# files and projects: `**/*.cs`, `src/**`, `*/**/*.csproj`.
+- Prefer extracting shared logic into a new internal/public helper when duplication appears.
+
+Rules:
+1. Pre-search requirement
+- Search for symbols and types using:
+  - `git grep -n "ClassName" -- "**/*.cs"`
+  - `rg "methodName" -g "**/*.cs"`
+
+2. If matches found
+- Recommend reuse or adapter (internal wrapper), or explain incompatibilities that justify a new impl.
+
+3. Generation constraints
+- Include XML doc comments and an xUnit/NUnit test example when adding public behavior.
+
+4. Duplicate detection (CI)
+- Use PMD/CPD for duplication detection across .NET codebases or adapt `jscpd` if preferred. Exclude `bin/`, `obj/`, `generated/`.
+
+5. Outputs
+- Summary, matched files/lines, refactor plan, minimal patch with docs and tests.
 # Copilot Instructions — C#/.NET
 
 - Follow PROJECT_RULES.md.
